@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from backend import models, database
+from . import models, database
 from pydantic import BaseModel
 
 models.Base.metadata.create_all(bind=database.engine)
