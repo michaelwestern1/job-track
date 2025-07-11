@@ -13,7 +13,7 @@ function App() {
 
   const fetchJobs = async () => {
     try {
-      const res = await axios.get('http://localhost:8000/api/jobs');
+      const res = await axios.get('https://job-track-1-1zl2.onrender.com/api/jobs');
       setJobs(res.data);
     } catch (err) {
       console.error('Error fetching jobs:', err);
@@ -27,7 +27,7 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:8000/api/jobs', form);
+      await axios.get('https://job-track-1-1zl2.onrender.com/api/jobs');
       setForm({
         title: '',
         company: '',
@@ -45,7 +45,7 @@ function App() {
     if (!jobToUpdate) return;
 
     try {
-      await axios.put(`http://localhost:8000/api/jobs/${id}`, {
+      await axios.put(`https://job-track-1-1zl2.onrender.com/api/jobs${id}`, {
         ...jobToUpdate,
         status: newStatus,
       });
