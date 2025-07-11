@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from backend import models, database
+import models
+import database
 from pydantic import BaseModel
 
 models.Base.metadata.create_all(bind=database.engine)
@@ -11,7 +12,7 @@ app = FastAPI()
 # ✅ CORS setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React frontend
+    allow_origins=["http://localhost:3000", "https://michaelwestern1.github.io"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
