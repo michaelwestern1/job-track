@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './App.css';
 
+const API_URL = 'https://job-track-1-1zl2.onrender.com';
+
 function App() {
   const [jobs, setJobs] = useState([]);
   const [form, setForm] = useState({
@@ -10,48 +12,17 @@ function App() {
     date_applied: '',
     status: 'Applied',
   });
+  const [loading, setLoading] = useState(false); // <-- Spinner state
 
   const fetchJobs = async () => {
+    setLoading(true);
     try {
-      const res = await axios.get('https://job-track-1-1zl2.onrender.com/api/jobs');
+      const res = await axios.get(`${API_URL}/api/jobs`);
       setJobs(res.data);
     } catch (err) {
       console.error('Error fetching jobs:', err);
-    }
-  };
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.get('https://job-track-1-1zl2.onrender.com/api/jobs');
-      setForm({
-        title: '',
-        company: '',
-        date_applied: '',
-        status: 'Applied',
-      });
-      fetchJobs();
-    } catch (err) {
-      console.error('Error adding job:', err);
-    }
-  };
-
-  const handleStatusChange = async (id, newStatus) => {
-    const jobToUpdate = jobs.find((job) => job.id === id);
-    if (!jobToUpdate) return;
-
-    try {
-      await axios.put(`https://job-track-1-1zl2.onrender.com/api/jobs${id}`, {
-        ...jobToUpdate,
-        status: newStatus,
-      });
-      fetchJobs();
-    } catch (err) {
-      console.error('Error updating job:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -59,9 +30,69 @@ function App() {
     fetchJobs();
   }, []);
 
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await axios.post(`${API_URL}/api/jobs`, form);
+      setJobs((prev) => [...prev, res.data]);
+      setForm({
+        title: '',
+        company: '',
+        date_applied: '',
+        status: 'Applied',
+      });
+    } catch (err) {
+      console.error('Error adding job:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStatusChange = async (id, newStatus) => {
+    const jobToUpdate = jobs.find((job) => job.id === id);
+    if (!jobToUpdate) return;
+
+    setLoading(true);
+    try {
+      await axios.put(`${API_URL}/api/jobs/${id}`, {
+        ...jobToUpdate,
+        status: newStatus,
+      });
+      setJobs((prevJobs) =>
+        prevJobs.map((job) =>
+          job.id === id ? { ...job, status: newStatus } : job
+        )
+      );
+    } catch (err) {
+      console.error('Error updating job:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    setLoading(true);
+    try {
+      await axios.delete(`${API_URL}/api/jobs/${id}`);
+      setJobs((prevJobs) => prevJobs.filter((job) => job.id !== id));
+    } catch (err) {
+      console.error('Error deleting job:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="App" style={{ maxWidth: '600px', margin: 'auto', padding: '2rem' }}>
       <h1>📋 Job Application Tracker</h1>
+
+      {loading && <div className="spinner"></div>}
+
       <form onSubmit={handleSubmit} style={{ marginBottom: '2rem' }}>
         <input
           type="text"
@@ -70,6 +101,7 @@ function App() {
           onChange={handleChange}
           placeholder="Job Title"
           required
+          disabled={loading}
           style={{ width: '100%', marginBottom: '8px', padding: '8px' }}
         />
         <input
@@ -79,6 +111,7 @@ function App() {
           onChange={handleChange}
           placeholder="Company"
           required
+          disabled={loading}
           style={{ width: '100%', marginBottom: '8px', padding: '8px' }}
         />
         <input
@@ -87,9 +120,12 @@ function App() {
           value={form.date_applied}
           onChange={handleChange}
           required
+          disabled={loading}
           style={{ width: '100%', marginBottom: '8px', padding: '8px' }}
         />
-        <button type="submit" style={{ padding: '10px 16px' }}>Add Job</button>
+        <button type="submit" style={{ padding: '10px 16px' }} disabled={loading}>
+          Add Job
+        </button>
       </form>
 
       <h2>📝 Tracked Jobs</h2>
@@ -103,6 +139,7 @@ function App() {
               <select
                 value={job.status}
                 onChange={(e) => handleStatusChange(job.id, e.target.value)}
+                disabled={loading}
                 style={{ marginLeft: '0.5rem' }}
               >
                 <option value="Applied">Applied</option>
@@ -110,6 +147,21 @@ function App() {
                 <option value="Hired">Hired</option>
               </select>
             </label>
+            <br />
+            <button
+              onClick={() => handleDelete(job.id)}
+              disabled={loading}
+              style={{
+                marginTop: '8px',
+                backgroundColor: '#e74c3c',
+                color: 'white',
+                border: 'none',
+                padding: '6px 12px',
+                cursor: 'pointer'
+              }}
+            >
+              Delete
+            </button>
           </li>
         ))}
       </ul>
