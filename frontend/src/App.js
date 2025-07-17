@@ -5,15 +5,19 @@ import './App.css';
 const API_URL = 'https://job-track-1-1zl2.onrender.com';
 
 function App() {
+  //Array of job records fetched from backend
   const [jobs, setJobs] = useState([]);
+  //Track input for title, company, date and status
   const [form, setForm] = useState({
     title: '',
     company: '',
     date_applied: '',
     status: 'Applied',
   });
+
   const [loading, setLoading] = useState(false); // <-- Spinner state
 
+  //Fetch job lists from backend, and update jobs state
   const fetchJobs = async () => {
     setLoading(true);
     try {
@@ -26,14 +30,17 @@ function App() {
     }
   };
 
+  //Runs fetchJobs once the component loads
   useEffect(() => {
     fetchJobs();
   }, []);
 
+  //Updates the form state when user types in an input field
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  //Submit new job to backend
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -53,6 +60,7 @@ function App() {
     }
   };
 
+  //Update job status change
   const handleStatusChange = async (id, newStatus) => {
     const jobToUpdate = jobs.find((job) => job.id === id);
     if (!jobToUpdate) return;
@@ -75,6 +83,7 @@ function App() {
     }
   };
 
+  //Delete a job
   const handleDelete = async (id) => {
     setLoading(true);
     try {

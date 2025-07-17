@@ -1,15 +1,19 @@
 from fastapi import FastAPI, Depends, HTTPException
+#Allow frontend to talk to backend
 from fastapi.middleware.cors import CORSMiddleware
+#Database session to add and delete records
 from sqlalchemy.orm import Session
 import models
 import database
 from pydantic import BaseModel
 
+#Create the jobs table in jobs.db
 models.Base.metadata.create_all(bind=database.engine)
 
+#Create FastAPI app instance
 app = FastAPI()
 
-# ✅ CORS setup
+#Allow requests from localhost or github
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -18,13 +22,14 @@ app.add_middleware(
         "https://michaelwestern1.github.io/job-track/",
         "https://michaelwestern1.github.io"
     ],
+    #Allow all methods like GET and Post, and allow all headers
 allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-# ✅ Pydantic schemas
+#Define the fields needed for a job record
 class JobBase(BaseModel):
     title: str
     company: str
@@ -35,21 +40,22 @@ class JobBase(BaseModel):
 class JobCreate(JobBase):
     pass
 
-
+#Inherit for JobBase, and add id
 class Job(JobBase):
     id: int
 
+#Pydantic recieves SQLAlchemy ORM objects
     class Config:
         orm_mode = True
 
 
-# ✅ Dependency
+#Returns a DB session
 def get_db():
     db = next(database.get_db())
     return db
 
 
-# ✅ Routes
+#Get all job records from the database
 @app.get("/api/jobs", response_model=list[Job])
 def read_jobs(db: Session = Depends(get_db)):
     return db.query(models.Job).all()
@@ -70,9 +76,11 @@ def update_job(job_id: int, job: JobCreate, db: Session = Depends(get_db)):
     if not db_job:
         raise HTTPException(status_code=404, detail="Job not found")
 
+    #Update the SQLAlchemy object fields
     for key, value in job.dict().items():
         setattr(db_job, key, value)
 
+    #Save the changes
     db.commit()
     db.refresh(db_job)
     return db_job
